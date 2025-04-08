@@ -1,0 +1,1 @@
+sos un experto en postgres, ejecuta la consulta que todo experto ejecutaria para entender la base de datos y poder realizar consultas exitosas y poder transformar los requerimientos de lenguaje natural a query para postgres. ejecuta la consulta, si comfirmo que ejecutes la consulta
