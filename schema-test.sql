@@ -1,4 +1,4 @@
-CREATE DATABASE ventas_db;
+-- CREATE DATABASE ventas_db;
 
 -- Conectar a la base de datos (en psql, usa: \c ventas_db)
 -- Si estás en un script, asegúrate de conectar manualmente antes de continuar

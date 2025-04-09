@@ -1,13 +1,17 @@
+import os
 import psycopg2
 from random import randint, choice
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 # Conectar a la base de datos
+load_dotenv()
+
 conn = psycopg2.connect(
-    dbname="ventas_db",
-    user="postgres",  
-    password="postgres",
-    host="localhost"
+    dbname=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST")
 )
 cursor = conn.cursor()
 
@@ -23,12 +27,15 @@ def random_date():
 # Insertar ventas
 for id_vendedor, num_ventas in enumerate(ventas_por_vendedor, 1):
     for _ in range(num_ventas):
-        id_campaña = choice([None] + list(range(1, 26)))  # Algunas ventas sin campaña
+        id_campana = choice([None] + list(range(1, 26)))  # Algunas ventas sin campaña
         fecha_venta = random_date()
         monto = randint(100, 1000) + randint(0, 99) / 100  # Monto entre 100 y 1,000
-        query = "INSERT INTO ventas (id_vendedor, id_campaña, fecha_venta, monto) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (id_vendedor, id_campaña, fecha_venta, monto))
+        
+        # Use column position instead of column name to avoid encoding issues
+        query = "INSERT INTO ventas VALUES (DEFAULT, %s, %s, %s, %s)"
+        cursor.execute(query, (id_vendedor, id_campana, fecha_venta, monto))
 
+# ...existing code...   
 # Confirmar cambios y cerrar conexión
 conn.commit()
 cursor.close()
