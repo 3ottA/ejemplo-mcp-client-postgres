@@ -1,111 +1,114 @@
-# MCP Simple Chatbot
+# MCP API compatible con OpenAI
 
-This example demonstrates how to integrate the Model Context Protocol (MCP) into a simple CLI chatbot. The implementation showcases MCP's flexibility by supporting multiple tools through MCP servers and is compatible with any LLM provider that follows OpenAI API standards.
+Esta API es compatible con el formato de la API de OpenAI Chat Completions v1, lo que permite integrarla fácilmente con servicios existentes que utilizan la API de OpenAI.
 
-## Requirements
+## Requisitos
 
-- Python 3.10
-- `python-dotenv`
-- `requests`
-- `mcp`
-- `uvicorn`
+- Python 3.9+
+- Dependencias del archivo `requirements.txt`
+- Una clave API válida de OpenAI para el motor subyacente
 
-## Installation
+## Instalación
 
-1. **Install the dependencies:**
+1. Clonar este repositorio
+2. Instalar las dependencias:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-2. **Set up environment variables:**
+3. Configurar la variable de entorno o crear un archivo `.env` con:
 
-   Create a `.env` file in the root directory and add your API key:
+```
+LLM_API_KEY=sk-tu-clave-api-openai
+```
 
-   ```plaintext
-   LLM_API_KEY=your_api_key_here
-   ```
+4. Asegurarse de tener un archivo `servers_config.json` con la configuración de los servidores MCP.
 
-3. **Configure servers:**
+## Ejecución
 
-   The `servers_config.json` follows the same structure as Claude Desktop, allowing for easy integration of multiple servers. 
-   Here's an example:
+Para iniciar el servidor:
 
-   ```json
-   {
-     "mcpServers": {
-       "sqlite": {
-         "command": "uvx",
-         "args": ["mcp-server-sqlite", "--db-path", "./test.db"]
-       },
-       "puppeteer": {
-         "command": "npx",
-         "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
-       }
-     }
-   }
-   ```
-   Environment variables are supported as well. Pass them as you would with the Claude Desktop App.
+```bash
+python main.py
+```
 
-   Example:
-   ```json
-   {
-      "mcpServers": {
-        "postgres": {
-          "command": "npx",
-          "args": [
-            "-y",
-            "@modelcontextprotocol/server-postgres",
-            "postgresql://postgres:postgres@localhost:5432/ssd"
-          ]
-        }
+El servidor se ejecutará en `http://0.0.0.0:8000`.
+
+## Uso
+
+La API es compatible con los siguientes endpoints de OpenAI:
+
+### Obtener modelos disponibles
+
+```bash
+# Endpoint compatible con OpenAI
+curl -X GET http://localhost:8000/v1/models
+
+# Endpoint adicional (hace lo mismo)
+curl -X GET http://localhost:8000/v1/chat/completions/models
+```
+
+### Generar completaciones de chat
+
+```bash
+curl -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hola, ¿cómo estás?"
       }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 4096
+  }'
+```
+
+La respuesta seguirá el mismo formato que la API de OpenAI:
+
+```json
+{
+  "id": "chatcmpl-123456",
+  "object": "chat.completion",
+  "created": 1682222800,
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "¡Hola! Estoy bien, gracias por preguntar. ¿En qué puedo ayudarte hoy?"
+      },
+      "finish_reason": "stop"
     }
-   ```
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 25,
+    "total_tokens": 45
+  }
+}
+```
 
-## Usage
+## Integración con NGINX
 
-1. **Run the client:**
+Para usar esta API con NGINX, configura un proxy inverso apuntando a este servicio:
 
-   ```bash
-   python main.py
-   ```
+```nginx
+location /v1/chat/completions {
+    proxy_pass http://localhost:8000/v1/chat/completions;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
 
-2. **Interact with the assistant:**
-   
-   The assistant will automatically detect available tools and can respond to queries based on the tools provided by the configured servers.
-
-3. **Exit the session:**
-
-   Type `quit` or `exit` to end the session.
-
-## Architecture
-
-- **Tool Discovery**: Tools are automatically discovered from configured servers.
-- **System Prompt**: Tools are dynamically included in the system prompt, allowing the LLM to understand available capabilities.
-- **Server Integration**: Supports any MCP-compatible server, tested with various server implementations including Uvicorn and Node.js.
-
-### Class Structure
-- **Configuration**: Manages environment variables and server configurations
-- **Server**: Handles MCP server initialization, tool discovery, and execution
-- **Tool**: Represents individual tools with their properties and formatting
-- **LLMClient**: Manages communication with the LLM provider
-- **ChatSession**: Orchestrates the interaction between user, LLM, and tools
-
-### Logic Flow
-
-1. **Tool Integration**:
-   - Tools are dynamically discovered from MCP servers
-   - Tool descriptions are automatically included in system prompt
-   - Tool execution is handled through standardized MCP protocol
-
-2. **Runtime Flow**:
-   - User input is received
-   - Input is sent to LLM with context of available tools
-   - LLM response is parsed:
-     - If it's a tool call → execute tool and return result
-     - If it's a direct response → return to user
-   - Tool results are sent back to LLM for interpretation
-   - Final response is presented to user
+location /v1/models {
+    proxy_pass http://localhost:8000/v1/models;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
 
 
