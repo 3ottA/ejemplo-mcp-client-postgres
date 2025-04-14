@@ -11,19 +11,24 @@ Esta API es compatible con el formato de la API de OpenAI Chat Completions v1, l
 ## Instalación
 
 1. Clonar este repositorio
-2. Instalar las dependencias:
 
+2. Crear y activar un entorno virtual (opcional pero recomendado):
+```bash
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+```
+
+3. Instalar las dependencias:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configurar la variable de entorno o crear un archivo `.env` con:
-
+4. Configurar la variable de entorno o crear un archivo `.env` con:
 ```
 LLM_API_KEY=sk-tu-clave-api-openai
 ```
 
-4. Asegurarse de tener un archivo `servers_config.json` con la configuración de los servidores MCP.
+5. Asegurarse de tener un archivo `servers_config.json` con la configuración de los servidores MCP.
 
 ## Ejecución
 
